@@ -1,0 +1,31 @@
+Package: spotmapr
+Title: Interactive Epidemiological Spot Maps for India
+Version: 0.1.10
+Authors@R: person("Tharun", "Mallesan", email = "tharunmallesan@gmail.com",
+                   role = c("aut", "cre"))
+Description: Build interactive spot maps for epidemiological case-control data
+    in India. Supports automatic detection of latitude, longitude, and outcome
+    columns, spatial joining with bundled state and district boundaries, and
+    produces interactive HTML maps with dot-density and spot-pin display modes.
+License: MIT + file LICENSE
+URL: https://github.com/TharunMallesan/spotmapr
+BugReports: https://github.com/TharunMallesan/spotmapr/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends: R (>= 4.1.0)
+Imports:
+    sf,
+    leaflet,
+    htmltools,
+    htmlwidgets,
+    readr,
+    readxl,
+    stats,
+    utils
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+LazyData: true
+Config/roxygen2/version: 8.0.0
