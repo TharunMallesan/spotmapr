@@ -99,7 +99,10 @@ spot_map <- function(data,
   center_lat <- mean(coords_cases[, 2], na.rm = TRUE)
   center_lon <- mean(coords_cases[, 1], na.rm = TRUE)
 
-  m <- leaflet::leaflet() |>
+  m <- leaflet::leaflet(
+    width = "100%", height = "100%",
+    options = leaflet::leafletOptions(zoomSnap = 0.1, zoomDelta = 0.1)
+  ) |>
     leaflet::addProviderTiles(leaflet::providers$CartoDB.Positron) |>
     leaflet::setView(lng = center_lon, lat = center_lat, zoom = 5)
 
@@ -222,7 +225,15 @@ spot_map <- function(data,
 
   sidebar_js <- build_sidebar_js(cluster_color, case_color, control_color)
 
+  # Full-page styling so the map fills the browser window
+  fullpage_css <- htmltools::tags$style(htmltools::HTML("
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+    #htmlwidget_container { width: 100%; height: 100%; }
+    .leaflet.html-widget { width: 100% !important; height: 100% !important; }
+  "))
+
   m <- m |>
+    htmlwidgets::prependContent(fullpage_css) |>
     htmlwidgets::prependContent(sidebar) |>
     htmlwidgets::onRender(sidebar_js)
 
