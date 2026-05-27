@@ -45,7 +45,7 @@ build_sidebar_html <- function(n_cases, n_controls, mode,
     font-size: 13px;
     color: #2c3e50;
     overflow-y: auto;
-    transform: translateX(115%%);
+    transform: translateX(115%%%%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 #map-sidebar.open { transform: translateX(0); }
@@ -56,7 +56,7 @@ build_sidebar_html <- function(n_cases, n_controls, mode,
 .sidebar-header {
     padding: 16px 18px 12px;
     border-bottom: 1px solid #eef0f3;
-    background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
+    background: linear-gradient(135deg, #667eea 0%%%%, #764ba2 100%%%%);
     border-radius: 12px 12px 0 0;
     color: #fff;
 }
@@ -133,7 +133,7 @@ build_sidebar_html <- function(n_cases, n_controls, mode,
     background: #fff;
 }
 
-input[type="range"] { width: 100%%; accent-color: #667eea; }
+input[type="range"] { width: 100%%%%; accent-color: #667eea; }
 .slider-row { display: flex; align-items: center; gap: 10px; }
 .slider-value {
     min-width: 32px;
@@ -145,7 +145,7 @@ input[type="range"] { width: 100%%; accent-color: #667eea; }
 
 .btn {
     display: block;
-    width: 100%%;
+    width: 100%%%%;
     padding: 9px 12px;
     margin: 6px 0;
     background: #667eea;
@@ -167,7 +167,7 @@ input[type="range"] { width: 100%%; accent-color: #667eea; }
 .spot-filter.show { display: block; }
 
 #map-legend {
-    position: absolute;
+    position: fixed;
     top: 16px;
     left: 60px;
     z-index: 1000;
@@ -190,7 +190,7 @@ input[type="range"] { width: 100%%; accent-color: #667eea; }
     font-size: 12px; color: #2c3e50;
 }
 .legend-icon {
-    width: 14px; height: 14px; border-radius: 50%%;
+    width: 14px; height: 14px; border-radius: 50%%%%;
     margin-right: 9px; border: 1px solid rgba(0,0,0,0.15);
 }
 
@@ -254,31 +254,6 @@ input[type="range"] { width: 100%%; accent-color: #667eea; }
     </div>
   </div>
 
-  <div class="sidebar-section" id="clusterColorSection">
-    <h4>Cluster Colour</h4>
-    <div class="swatch-row">
-      <label>Pick a colour</label>
-      <input type="color" id="clusterCustomColor" value="%s">
-    </div>
-  </div>
-
-  <div class="sidebar-section" id="pinColorSection" style="display:none;">
-    <h4>Pin Colours</h4>
-    <div class="swatch-row">
-      <label>Cases</label>
-      <input type="color" id="caseColorPicker" value="%s">
-    </div>
-    <div class="swatch-row">
-      <label>Controls</label>
-      <input type="color" id="controlColorPicker" value="%s">
-    </div>
-    <h4 style="margin-top:14px;">Pin Size</h4>
-    <div class="slider-row">
-      <input type="range" id="pinSizeSlider" min="0.5" max="2.0" step="0.1" value="1.0">
-      <span class="slider-value" id="pinSizeValue">1.0x</span>
-    </div>
-  </div>
-
   <div class="sidebar-section">
     <h4>Export Map</h4>
     <a class="btn secondary" id="downloadPrintLink">Print / Save PDF</a>
@@ -286,9 +261,7 @@ input[type="range"] { width: 100%%; accent-color: #667eea; }
 </div>
 ',
     case_color, control_color,
-    n_cases, n_controls, mode,
-    cluster_color,
-    case_color, control_color
+    n_cases, n_controls, mode
   ))
 }
 
@@ -296,153 +269,95 @@ input[type="range"] { width: 100%%; accent-color: #667eea; }
 #' Build the sidebar JavaScript for layer toggling
 #' @keywords internal
 build_sidebar_js <- function(cluster_color, case_color, control_color) {
+  # Use R leaflet's built-in group show/hide methods
   sprintf('
 function(el, x) {
-  var mapObj = this;
+  try {
+    var mapObj = this;
 
-  // Move legend inside map container
-  var legendDiv = document.getElementById("map-legend");
-  if (legendDiv) mapObj.getContainer().appendChild(legendDiv);
+    var sidebar = document.getElementById("map-sidebar");
+    var toggleBtn = document.getElementById("sidebar-toggle-btn");
+    if (!sidebar || !toggleBtn) return;
 
-  var sidebar = document.getElementById("map-sidebar");
-  var toggleBtn = document.getElementById("sidebar-toggle-btn");
-  var sidebarOpen = true;
-  sidebar.classList.add("open");
+    var sidebarOpen = true;
+    sidebar.classList.add("open");
 
-  toggleBtn.addEventListener("click", function() {
-    sidebarOpen = !sidebarOpen;
-    sidebar.classList.toggle("open", sidebarOpen);
-  });
-
-  window.caseColor    = "%s";
-  window.controlColor = "%s";
-  window.clusterBaseColor = "%s";
-  window.pinScale = 1.0;
-
-  // Identify layers by group name
-  var dotsLayer = null;
-  var pinsCasesLayer = null;
-  var pinsControlsLayer = null;
-
-  mapObj.eachLayer(function(layer) {
-    if (layer.options && layer.options.group === "Dot Density Layer") dotsLayer = layer;
-    if (layer.options && layer.options.group === "Spot Map - Cases") pinsCasesLayer = layer;
-    if (layer.options && layer.options.group === "Spot Map - Controls") pinsControlsLayer = layer;
-  });
-
-  function updateLegend() {
-    var legendBox = document.getElementById("map-legend");
-    var isPins = document.querySelector("input[name=\\"markerMode\\"]:checked").value === "pins";
-    legendBox.style.display = isPins ? "block" : "none";
-    if (!isPins) return;
-    document.getElementById("legend-icon-case").style.backgroundColor = window.caseColor;
-    document.getElementById("legend-icon-control").style.backgroundColor = window.controlColor;
-    var isBoth = document.querySelector("input[name=\\"spotFilterMode\\"]:checked").value === "both";
-    document.getElementById("legend-control-item").style.display = isBoth ? "flex" : "none";
-  }
-
-  function makePinIcon(colorHex) {
-    var scale = window.pinScale || 1.0;
-    var baseW = 18, baseH = 24;
-    var html =
-      "<div style=\\"position:relative;width:"+baseW+"px;height:"+baseH+"px;transform:scale("+scale+");transform-origin:50%% 100%%;\\">" +
-        "<div style=\\"position:absolute;left:3px;top:6px;width:12px;height:12px;border-radius:50%% 50%% 50%% 0;background:"+colorHex+";transform:rotate(-45deg);box-shadow:0 0 2px rgba(0,0,0,0.5);\\"></div>" +
-        "<div style=\\"position:absolute;left:6.5px;top:9.5px;width:5px;height:5px;border-radius:50%%;background:white;opacity:0.9;\\"></div>" +
-      "</div>";
-    return L.divIcon({ html: html, className: "", iconSize: [baseW, baseH], iconAnchor: [baseW/2, baseH] });
-  }
-
-  function redrawPins() {
-    if (pinsCasesLayer) {
-      mapObj.eachLayer(function(layer) {
-        if (layer.options && layer.options.group === "Spot Map - Cases") {
-          layer.eachLayer(function(marker) {
-            if (marker.setIcon) marker.setIcon(makePinIcon(window.caseColor));
-          });
-        }
-      });
-    }
-    if (pinsControlsLayer) {
-      mapObj.eachLayer(function(layer) {
-        if (layer.options && layer.options.group === "Spot Map - Controls") {
-          layer.eachLayer(function(marker) {
-            if (marker.setIcon) marker.setIcon(makePinIcon(window.controlColor));
-          });
-        }
-      });
-    }
-    updateLegend();
-  }
-
-  function applyLayerLogic() {
-    var mode = document.querySelector("input[name=\\"markerMode\\"]:checked").value;
-    var filter = document.querySelector("input[name=\\"spotFilterMode\\"]:checked").value;
-
-    document.getElementById("spotFilterBox").classList.toggle("show", mode === "pins");
-    document.getElementById("clusterColorSection").style.display = mode === "dots" ? "block" : "none";
-    document.getElementById("pinColorSection").style.display = mode === "pins" ? "block" : "none";
-
-    var groups = mapObj.layerControl ? mapObj.layerControl._layers : null;
-
-    if (mode === "dots") {
-      mapObj.eachLayer(function(l) {
-        if (l.options && l.options.group === "Dot Density Layer" && !mapObj.hasLayer(l)) mapObj.addLayer(l);
-        if (l.options && l.options.group === "Spot Map - Cases" && mapObj.hasLayer(l)) mapObj.removeLayer(l);
-        if (l.options && l.options.group === "Spot Map - Controls" && mapObj.hasLayer(l)) mapObj.removeLayer(l);
-      });
-    } else {
-      mapObj.eachLayer(function(l) {
-        if (l.options && l.options.group === "Dot Density Layer" && mapObj.hasLayer(l)) mapObj.removeLayer(l);
-      });
-      mapObj.eachLayer(function(l) {
-        if (l.options && l.options.group === "Spot Map - Cases" && !mapObj.hasLayer(l)) mapObj.addLayer(l);
-      });
-      if (filter === "both") {
-        mapObj.eachLayer(function(l) {
-          if (l.options && l.options.group === "Spot Map - Controls" && !mapObj.hasLayer(l)) mapObj.addLayer(l);
-        });
-      } else {
-        mapObj.eachLayer(function(l) {
-          if (l.options && l.options.group === "Spot Map - Controls" && mapObj.hasLayer(l)) mapObj.removeLayer(l);
-        });
-      }
-      redrawPins();
-    }
-    updateLegend();
-  }
-
-  document.querySelectorAll("input[type=radio]").forEach(function(r) {
-    r.addEventListener("change", applyLayerLogic);
-  });
-
-  var custClust = document.getElementById("clusterCustomColor");
-  if (custClust) {
-    custClust.addEventListener("input", function() {
-      window.clusterBaseColor = custClust.value;
+    toggleBtn.addEventListener("click", function() {
+      sidebarOpen = !sidebarOpen;
+      sidebar.classList.toggle("open", sidebarOpen);
     });
+
+    // Use Leaflet layerGroups API to show/hide groups
+    function showGroup(name) {
+      mapObj.eachLayer(function(layer) {
+        if (layer.options && layer.options.group === name) {
+          layer.setStyle && layer.setStyle({opacity: 1, fillOpacity: layer._origFillOpacity || 0.8});
+          if (layer._icon) layer._icon.style.display = "";
+          if (layer._shadow) layer._shadow.style.display = "";
+        }
+      });
+    }
+
+    function hideGroup(name) {
+      mapObj.eachLayer(function(layer) {
+        if (layer.options && layer.options.group === name) {
+          if (!layer._origFillOpacity) layer._origFillOpacity = layer.options.fillOpacity || 0.8;
+          layer.setStyle && layer.setStyle({opacity: 0, fillOpacity: 0});
+          if (layer._icon) layer._icon.style.display = "none";
+          if (layer._shadow) layer._shadow.style.display = "none";
+        }
+      });
+    }
+
+    function updateLegend() {
+      var legendBox = document.getElementById("map-legend");
+      if (!legendBox) return;
+      var isPins = document.querySelector("input[name=\\"markerMode\\"]:checked").value === "pins";
+      legendBox.style.display = isPins ? "block" : "none";
+      if (!isPins) return;
+      var isBoth = document.querySelector("input[name=\\"spotFilterMode\\"]:checked").value === "both";
+      document.getElementById("legend-control-item").style.display = isBoth ? "flex" : "none";
+    }
+
+    function applyLayerLogic() {
+      var mode = document.querySelector("input[name=\\"markerMode\\"]:checked").value;
+      var filter = document.querySelector("input[name=\\"spotFilterMode\\"]:checked").value;
+
+      document.getElementById("spotFilterBox").classList.toggle("show", mode === "pins");
+
+      if (mode === "dots") {
+        // Show clusters, hide pins
+        var clusterEls = document.querySelectorAll(".marker-cluster-group, .leaflet-marker-icon.marker-cluster, .marker-cluster");
+        clusterEls.forEach(function(e) { e.style.display = ""; });
+        // Use the leaflet groups API
+        try { mapObj.groupLayerStore && mapObj.groupLayerStore.show("Dot Density Layer"); } catch(e) {}
+        try { mapObj.groupLayerStore && mapObj.groupLayerStore.hide("Spot Map - Cases"); } catch(e) {}
+        try { mapObj.groupLayerStore && mapObj.groupLayerStore.hide("Spot Map - Controls"); } catch(e) {}
+      } else {
+        try { mapObj.groupLayerStore && mapObj.groupLayerStore.hide("Dot Density Layer"); } catch(e) {}
+        try { mapObj.groupLayerStore && mapObj.groupLayerStore.show("Spot Map - Cases"); } catch(e) {}
+        if (filter === "both") {
+          try { mapObj.groupLayerStore && mapObj.groupLayerStore.show("Spot Map - Controls"); } catch(e) {}
+        } else {
+          try { mapObj.groupLayerStore && mapObj.groupLayerStore.hide("Spot Map - Controls"); } catch(e) {}
+        }
+      }
+      updateLegend();
+    }
+
+    document.querySelectorAll("input[type=radio]").forEach(function(r) {
+      r.addEventListener("change", applyLayerLogic);
+    });
+
+    var printBtn = document.getElementById("downloadPrintLink");
+    if (printBtn) {
+      printBtn.addEventListener("click", function() { window.print(); });
+    }
+
+    updateLegend();
+  } catch(err) {
+    console.log("SpotMap sidebar error:", err);
   }
-
-  document.getElementById("caseColorPicker").addEventListener("input", function(e) {
-    window.caseColor = e.target.value;
-    redrawPins();
-  });
-  document.getElementById("controlColorPicker").addEventListener("input", function(e) {
-    window.controlColor = e.target.value;
-    redrawPins();
-  });
-
-  var sizeSlider = document.getElementById("pinSizeSlider");
-  var sizeValue = document.getElementById("pinSizeValue");
-  sizeSlider.addEventListener("input", function(e) {
-    window.pinScale = parseFloat(e.target.value);
-    sizeValue.textContent = window.pinScale.toFixed(1) + "x";
-    redrawPins();
-  });
-
-  document.getElementById("downloadPrintLink").addEventListener("click", function() { window.print(); });
-
-  applyLayerLogic();
-  redrawPins();
 }
-', case_color, control_color, cluster_color)
+', cluster_color, case_color, control_color)
 }

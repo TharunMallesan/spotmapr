@@ -103,52 +103,45 @@ spot_map <- function(data,
     width = "100%", height = "100%",
     options = leaflet::leafletOptions(zoomSnap = 0.1, zoomDelta = 0.1)
   ) |>
-    leaflet::addProviderTiles(leaflet::providers$CartoDB.Positron) |>
+    leaflet::addTiles() |>
     leaflet::setView(lng = center_lon, lat = center_lat, zoom = 5)
 
-  # 8. Boundary layers
-  m <- m |>
-    leaflet::addGeoJSON(
-      geojson = sf_to_geojson(india_sub),
+  # 8. Boundary layers (using addPolygons with sf objects directly)
+  if (!is.null(india_sub) && nrow(india_sub) > 0) {
+    m <- m |> leaflet::addPolygons(
+      data = india_sub,
       weight = 1, color = "#000000", fillOpacity = 0.0, opacity = 0.5,
       group = "India Border"
-    ) |>
-    leaflet::addGeoJSON(
-      geojson = sf_to_geojson(states_sub),
+    )
+  }
+  if (!is.null(states_sub) && nrow(states_sub) > 0) {
+    m <- m |> leaflet::addPolygons(
+      data = states_sub,
       weight = 1.5, color = "#4B0082", fillOpacity = 0.05, opacity = 0.7,
       group = "Affected States"
-    ) |>
-    leaflet::addGeoJSON(
-      geojson = sf_to_geojson(districts_sub),
+    )
+  }
+  if (!is.null(districts_sub) && nrow(districts_sub) > 0) {
+    m <- m |> leaflet::addPolygons(
+      data = districts_sub,
       weight = 1, color = "#000000", fillOpacity = 0.01, opacity = 1.0,
       group = "Affected Districts"
     )
-
-  # 9. Auto-zoom
-  n_states_uniq <- length(mode_info$unique_states)
-  n_dist_uniq <- length(mode_info$affected_districts)
-
-  if (n_states_uniq > 1) {
-    target_bounds <- if (nrow(affected_states) > 0) sf::st_bbox(affected_states) else bounds
-  } else if (n_states_uniq == 1) {
-    if (n_dist_uniq > 1) {
-      target_bounds <- if (nrow(affected_states) > 0) sf::st_bbox(affected_states) else bounds
-    } else {
-      target_bounds <- if (nrow(affected_districts) > 0) sf::st_bbox(affected_districts) else bounds
-    }
-  } else {
-    target_bounds <- bounds
   }
 
-  if (all(is.finite(target_bounds))) {
-    span_x <- target_bounds["xmax"] - target_bounds["xmin"]
-    span_y <- target_bounds["ymax"] - target_bounds["ymin"]
-    buf <- 0.05
+  # 9. Auto-zoom using data bounds
+  tb <- as.numeric(bounds)  # xmin, ymin, xmax, ymax — strip names
+  if (length(tb) == 4 && all(is.finite(tb)) && tb[3] > tb[1] && tb[4] > tb[2]) {
+    buf_x <- (tb[3] - tb[1]) * 0.1
+    buf_y <- (tb[4] - tb[2]) * 0.1
+    # Ensure minimum buffer
+    if (buf_x < 0.01) buf_x <- 0.5
+    if (buf_y < 0.01) buf_y <- 0.5
     m <- m |> leaflet::fitBounds(
-      lng1 = target_bounds["xmin"] - span_x * buf,
-      lat1 = target_bounds["ymin"] - span_y * buf,
-      lng2 = target_bounds["xmax"] + span_x * buf,
-      lat2 = target_bounds["ymax"] + span_y * buf
+      lng1 = tb[1] - buf_x,
+      lat1 = tb[2] - buf_y,
+      lng2 = tb[3] + buf_x,
+      lat2 = tb[4] + buf_y
     )
   }
 
@@ -227,9 +220,9 @@ spot_map <- function(data,
 
   # Full-page styling so the map fills the browser window
   fullpage_css <- htmltools::tags$style(htmltools::HTML("
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-    #htmlwidget_container { width: 100%; height: 100%; }
-    .leaflet.html-widget { width: 100% !important; height: 100% !important; }
+    html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; }
+    #htmlwidget_container { width: 100vw; height: 100vh; }
+    .leaflet.html-widget { width: 100vw !important; height: 100vh !important; }
   "))
 
   m <- m |>
@@ -237,22 +230,19 @@ spot_map <- function(data,
     htmlwidgets::prependContent(sidebar) |>
     htmlwidgets::onRender(sidebar_js)
 
+  # Override sizing policy to fill browser
+  m$sizingPolicy <- htmlwidgets::sizingPolicy(
+    defaultWidth = "100%",
+    defaultHeight = "100%",
+    browser.fill = TRUE,
+    viewer.fill = TRUE,
+    padding = 0
+  )
+
   # 13. Save or return
   if (!is.null(output)) {
     out_path <- normalizePath(output, mustWork = FALSE)
-    # Try selfcontained first; fall back to non-selfcontained if pandoc missing
-    saved <- tryCatch({
-      htmlwidgets::saveWidget(m, file = out_path, selfcontained = TRUE)
-      TRUE
-    }, error = function(e) {
-      if (grepl("pandoc", conditionMessage(e), ignore.case = TRUE)) {
-        # Save with external dependencies in a lib folder
-        htmlwidgets::saveWidget(m, file = out_path, selfcontained = FALSE)
-        TRUE
-      } else {
-        stop(e)
-      }
-    })
+    htmlwidgets::saveWidget(m, file = out_path, selfcontained = FALSE)
     message("Map saved to: ", output)
     invisible(m)
   } else {
