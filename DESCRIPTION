@@ -8,8 +8,8 @@ Description: Build interactive spot maps for epidemiological case-control data
     columns, spatial joining with bundled state and district boundaries, and
     produces interactive HTML maps with dot-density and spot-pin display modes.
 License: MIT + file LICENSE
-URL: https://github.com/TharunMallesan/spotmapr
-BugReports: https://github.com/TharunMallesan/spotmapr/issues
+URL: https://github.com/ADARV-Epi-hub/spotmapr
+BugReports: https://github.com/ADARV-Epi-hub/spotmapr/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Depends: R (>= 4.1.0)

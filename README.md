@@ -15,7 +15,7 @@
 
 ```r
 # install.packages("remotes")
-remotes::install_github("TharunMallesan/spotmapr")
+remotes::install_github("ADARV-Epi-hub/spotmapr")
 ```
 
 ### System requirements
