@@ -1,12 +1,14 @@
 Package: spotmapr
 Title: Interactive Epidemiological Spot Maps for India
 Version: 0.1.11
-Authors@R: person("Tharun", "Mallesan", email = "tharunmallesan@gmail.com",
-                   role = c("aut", "cre"))
-Description: Build interactive spot maps for epidemiological case-control data
-    in India. Supports automatic detection of latitude, longitude, and outcome
-    columns, spatial joining with bundled state and district boundaries, and
-    produces interactive HTML maps with dot-density and spot-pin display modes.
+Authors@R: person("Muniraj", "Mallesan",
+                  email = "adarv@nieicmr.org.in",
+                  role = c("aut", "cre"))
+Description: Build interactive spot maps for epidemiological case-control
+    data in India. Supports automatic detection of latitude, longitude, and
+    outcome columns, spatial joining with bundled state and district
+    boundaries, and produces interactive 'HTML' maps with dot-density and
+    spot-pin display modes.
 License: MIT + file LICENSE
 URL: https://github.com/ADARV-Epi-hub/spotmapr
 BugReports: https://github.com/ADARV-Epi-hub/spotmapr/issues
@@ -27,5 +29,4 @@ Suggests:
     knitr,
     rmarkdown
 Config/testthat/edition: 3
-LazyData: true
 Config/roxygen2/version: 8.0.0

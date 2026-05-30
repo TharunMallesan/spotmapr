@@ -5,3 +5,4 @@
 ^.*\.tar\.gz$
 ^\.git$
 ^\.gitignore$
+^cran-comments\.md$
