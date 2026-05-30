@@ -1,7 +1,7 @@
 # spotmapr
 
 > Interactive epidemiological spot maps for India — the R port of the
-> Python [`spotmap`](https://github.com/TharunMallesan/spotmap) package.
+> Python [`spotmap`](https://github.com/ADARV-Epi-hub/spotmap) package.
 
 `spotmapr` builds zoomable HTML spot maps from case-control data, with:
 
